@@ -88,7 +88,7 @@ const adminSchema = mongoose.Schema(
   }
 );
 
-userSchema.pre("save", function (next) {
+adminSchema.pre("save", function (next) {
   this.role = "administrator";
   next();
 });

@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 const companySchema = mongoose.Schema(
   {
     unique_id: String,
-    fullname: {
+    companyName: {
       type: String,
       // required: [true, "full name is required"],
       set: (v) => v.trim().replace(/\s+/g, " "),
@@ -25,18 +25,7 @@ const companySchema = mongoose.Schema(
         message: (props) => `${props.value} is not a valid mobile number!`,
       },
     },
-    preference: {
-      mode: {
-        type: String,
-        enum: ["light", "dark"],
-        default: "light",
-      },
-      language: {
-        type: String,
-        enum: ["en", "am"],
-        default: "en",
-      },
-    },
+
     password: {
       type: String,
       // required: true,
@@ -44,58 +33,35 @@ const companySchema = mongoose.Schema(
     },
     role: {
       type: String,
-      default: "manager",
+      default: "company",
     },
     status: {
-      // this is for the managers to make it inactive incase of an emergency
+      // this is for the companys to make it inactive incase of an emergency
       type: String,
       required: true,
       enum: ["active", "inactive"],
       default: "inactive",
     },
     main_status: {
-      // this is for the admin to make them active after verifying the manager info
+      // this is for the admin to make them active after verifying the company info
       type: String,
       require: true,
-      enum: ["active", "inactive", "waiting", "unavailable"], // unavailable if the manager is not working anymore(change/ fired/ retired)
+      enum: ["active", "inactive", "waiting", "unavailable"], // unavailable if the company is not working anymore(change/ fired/ retired)
       default: "inactive",
     },
-    printers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Printer",
-      },
-    ],
-    payment: [
-      {
-        bankName: String,
-        bankAccount: String, //hash this if needed
-      },
-    ],
-    profile: {
+    company_info: {
       type: String,
-      default: "",
     },
-    address: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Address",
-    },
-    // may be remove this
-    shopInfo: {
-      type: Object,
-      default: {},
-    },
-    sold: {
+    total_shares: {
       type: Number,
       default: 0,
-      min: 0,
     },
   },
   { timestamps: true }
 );
 
 companySchema.pre("save", function (next) {
-  this.role = "manager";
+  this.role = "company";
   next();
 });
 

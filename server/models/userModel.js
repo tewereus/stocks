@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 const userSchema = mongoose.Schema(
   {
@@ -73,6 +75,12 @@ const userSchema = mongoose.Schema(
         default: "en",
       },
     },
+    shares: [
+      {
+        company_name: { type: mongoose.Schema.Types.ObjectId, ref: "Company" },
+        quantity: { type: Number, default: 0 },
+      },
+    ],
     address: {
       type: String,
       set: (v) => v.trim().replace(/\s+/g, " "), // Trim and normalize address
