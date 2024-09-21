@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
 
 const userSchema = mongoose.Schema(
   {
@@ -63,40 +62,13 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    preference: {
-      mode: {
-        type: String,
-        enum: ["light", "dark"],
-        default: "light",
-      },
-      language: {
-        type: String,
-        enum: ["en", "am"],
-        default: "en",
-      },
-    },
     shares: [
       {
         company_name: { type: mongoose.Schema.Types.ObjectId, ref: "Company" },
         quantity: { type: Number, default: 0 },
       },
     ],
-    address: {
-      type: String,
-      set: (v) => v.trim().replace(/\s+/g, " "), // Trim and normalize address
-    },
-    lastLoginIp: String, // Store the last login IP address
-    lastLoginAt: Date, // Store the last login timestamp
-    loginAttempts: {
-      type: Number,
-      default: 0,
-      select: false, // Hide this field by default
-    },
-    lockUntil: Date, // Store the lock expiration date
     refreshToken: { type: String },
-    passwordChangedAt: Date,
-    passwordResetToken: String,
-    passwordResetExpires: Date,
   },
   {
     timestamps: true,
@@ -123,19 +95,6 @@ userSchema.pre("save", function (next) {
 
 userSchema.methods.isPasswordMatched = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
-};
-
-userSchema.methods.createResetPasswordToken = async function () {
-  const resettoken = crypto.randomBytes(32).toString("hex");
-  this.passwordResetToken = crypto
-    .createHash("sha256")
-    .update(resettoken)
-    .digest("hex");
-  this.passwordResetExpires = new Date();
-  this.passwordResetExpires.setMinutes(
-    this.passwordResetExpires.getMinutes() + 10
-  );
-  return resettoken;
 };
 
 module.exports = mongoose.model("User", userSchema);

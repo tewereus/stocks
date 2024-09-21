@@ -106,29 +106,88 @@ const deleteAccount = asyncHandler(async (req, res) => {
 const addShares = asyncHandler(async (req, res) => {
   const { companyId, availableShares, pricePerShare, minSharesToBuy } =
     req.body;
+
   try {
+    // Find the company by ID
     const company = await Company.findById(companyId);
     if (!company) {
       return res.status(404).json({ message: "Company not found" });
     }
 
-    const sharesToAdd = Number(availableShares);
-    // Create a new share entry
-    const newShare = new Share({
-      company: companyId,
-      availableShares,
-      pricePerShare,
-      minSharesToBuy,
-    });
+    // Check if a share entry already exists for this company
+    let existingShare = await Share.findOne({ company: companyId });
 
-    await newShare.save();
+    if (existingShare) {
+      // Update existing share entry
+      existingShare.availableShares += Number(availableShares);
+      // Optionally update price per share and minimum shares to buy if provided
+      existingShare.pricePerShare =
+        pricePerShare || existingShare.pricePerShare;
+      existingShare.minSharesToBuy =
+        minSharesToBuy || existingShare.minSharesToBuy;
 
-    company.total_shares += sharesToAdd;
-    await company.save();
+      await existingShare.save();
 
-    res.status(201).json(newShare);
+      // Update total shares in the company model
+      company.total_shares += Number(availableShares);
+      await company.save();
+
+      return res.status(200).json(existingShare); // Return updated share information
+    } else {
+      // Create a new share entry if none exists
+      const newShare = new Share({
+        company: companyId,
+        availableShares,
+        pricePerShare,
+        minSharesToBuy,
+      });
+
+      await newShare.save();
+
+      // Update total shares in the company model
+      company.total_shares += Number(availableShares);
+      await company.save();
+
+      return res.status(201).json(newShare); // Return newly created share information
+    }
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    return res.status(400).json({ message: error.message });
+  }
+});
+
+const deleteShares = asyncHandler(async (req, res) => {
+  const { shareId } = req.params; // Get shareId from request parameters
+
+  try {
+    // Find the share entry by ID
+    const shareEntry = await Share.findById(shareId);
+    if (!shareEntry) {
+      return res.status(404).json({ message: "Share entry not found" });
+    }
+
+    // Find the company associated with this share
+    const company = await Company.findById(shareEntry.company);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // Update company's total shares by adding back the available shares
+    company.total_shares += shareEntry.availableShares;
+
+    await company.save(); // Save updated company information
+
+    // Delete the share entry
+    await Share.findByIdAndDelete(shareId);
+
+    res
+      .status(200)
+      .json({
+        message:
+          "Share deleted successfully, remaining shares returned to company",
+      });
+  } catch (error) {
+    console.error(error); // Log error for debugging
+    return res.status(400).json({ message: error.message });
   }
 });
 
@@ -139,4 +198,5 @@ module.exports = {
   viewProfile,
   deleteAccount,
   addShares,
+  deleteShares,
 };

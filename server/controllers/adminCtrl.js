@@ -208,11 +208,11 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 const addCompany = asyncHandler(async (req, res) => {
   // const {id} = req.user
-  const { mobile, email } = req.body;
+  const { mobile, email, companyName } = req.body;
   try {
     const company = await Company.findOne({ mobile });
     if (company) throw new Error("Company with this mobile already exists");
-    const newCompany = await Company.create({ mobile, email }); // check if it can be added with await company.save()
+    const newCompany = await Company.create({ mobile, email, companyName }); // check if it can be added with await company.save()
     const token = await newCompany.createCompanyToken();
     await newCompany.save();
     console.log(token);

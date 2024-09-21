@@ -4,6 +4,7 @@ const { generateToken } = require("../config/jwtToken");
 const { generateRefreshToken } = require("../config/refreshToken");
 const Company = require("../models/companyModel");
 const Share = require("../models/shareModel");
+const Sale = require("../models/saleModel");
 
 const register = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -110,29 +111,26 @@ const buyShare = asyncHandler(async (req, res) => {
   try {
     const share = await Share.findById(shareId);
 
-    // Check if share exists and is available
+    const sharesToBuy = Number(numberOfShares);
+
     if (!share || share.status !== "available") {
       return res
         .status(404)
         .json({ message: "Share not found or not available" });
     }
-
-    // Check if the number of shares is valid
-    if (numberOfShares < share.minSharesToBuy) {
-      return res
-        .status(400)
-        .json({
-          message: `You must buy at least ${share.minSharesToBuy} shares`,
-        });
+    if (sharesToBuy < share.minSharesToBuy) {
+      return res.status(400).json({
+        message: `You must buy at least ${share.minSharesToBuy} shares`,
+      });
     }
 
-    if (numberOfShares > share.availableShares) {
+    if (sharesToBuy > share.availableShares) {
       return res.status(400).json({ message: "Not enough shares available" });
     }
 
-    share.availableShares -= numberOfShares;
+    share.availableShares -= sharesToBuy;
     await share.save();
-    const totalValue = numberOfShares * share.pricePerShare;
+    const totalValue = sharesToBuy * share.pricePerShare;
     let user = await User.findById(userId);
 
     const existingShareIndex = user.shares.findIndex(
@@ -141,38 +139,226 @@ const buyShare = asyncHandler(async (req, res) => {
 
     if (existingShareIndex >= 0) {
       // Update existing entry
-      user.shares[existingShareIndex].quantity += numberOfShares;
+      user.shares[existingShareIndex].quantity += sharesToBuy;
       user.shares[existingShareIndex].value += totalValue;
     } else {
-      // Create new entry for this company
       user.shares.push({
         company_name: share.company,
-        quantity: numberOfShares,
+        quantity: sharesToBuy,
         value: totalValue,
       });
     }
-
-    // Save updated user information
     await user.save();
 
-    return res
-      .status(200)
-      .json({
-        message: "Purchase successful",
-        remainingShares: share.availableShares,
-      });
+    return res.status(200).json({
+      message: "Purchase successful",
+      remainingShares: share.availableShares,
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
 });
 
-const getBoughtShares = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+const sellShare = asyncHandler(async (req, res) => {
+  const { companyId, quantity, pricePerShare, minSharesToBuy } = req.body;
+  const { userId } = req.params; // Assuming userId is passed in the request parameters
+
   try {
     const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const userShare = user.shares.find(
+      (share) => share.company_name.toString() === companyId
+    );
+    if (!userShare || userShare.quantity < quantity) {
+      return res
+        .status(400)
+        .json({ message: "You do not have enough shares to sell" });
+    }
+    let existingSale = await Sale.findOne({
+      user: userId,
+      company_name: companyId,
+      status: "available",
+    });
+
+    if (existingSale) {
+      // Update existing sale entry
+      existingSale.quantity += Number(quantity); // Increase quantity of shares for sale
+      existingSale.pricePerShare = pricePerShare; // Update price per share if needed
+      existingSale.minSharesToBuy = minSharesToBuy; // Update minimum shares to buy if needed
+
+      await existingSale.save();
+    } else {
+      const newSale = new Sale({
+        user: userId,
+        company_name: companyId,
+        quantity,
+        pricePerShare,
+        minSharesToBuy,
+      });
+
+      await newSale.save(); // Save the new sale entry
+    }
+    userShare.quantity -= Number(quantity);
+    // If all shares are sold for this company, remove it from user's shares
+    if (userShare.quantity === 0) {
+      user.shares = user.shares.filter(
+        (share) => share.company_name.toString() !== companyId
+      );
+    }
+
+    await user.save(); // Save updated user information
+
+    res.status(201).json({
+      message: "Shares listed for sale successfully",
+      sale: existingSale || newSale,
+    });
   } catch (error) {
-    throw new Error(error);
+    res.status(400).json({ message: error.message });
+  }
+});
+
+const buyUsersShare = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { quantity, saleId } = req.body;
+
+  try {
+    const saleEntry = await Sale.findById(saleId);
+    console.log(saleEntry);
+    if (!saleEntry) {
+      return res.status(404).json({ message: "Sale entry not found" });
+    }
+
+    if (quantity < saleEntry.minSharesToBuy) {
+      return res.status(400).json({
+        message: `You must buy at least ${saleEntry.minSharesToBuy} shares`,
+      });
+    }
+
+    if (saleEntry.quantity < quantity) {
+      return res.status(400).json({ message: "Not enough shares available" });
+    }
+    saleEntry.quantity -= Number(quantity);
+
+    // If all shares are sold, mark the sale as sold
+    if (saleEntry.quantity === 0) {
+      saleEntry.status = "sold"; // Mark as sold
+      // or you can also delete the entry if it doesn't need to be in the database
+      // await Sale.findByIdAndDelete(saleId);
+    }
+
+    await saleEntry.save(); // Save updated sale entry
+
+    // Update buyer's shares
+    const buyer = await User.findById(userId);
+    if (!buyer) {
+      return res.status(404).json({ message: "Buyer not found" });
+    }
+
+    const existingBuyerShareIndex = buyer.shares.findIndex(
+      (share) =>
+        share.company_name.toString() === saleEntry.company_name.toString()
+    );
+
+    if (existingBuyerShareIndex >= 0) {
+      // Update existing share quantity for the buyer
+      buyer.shares[existingBuyerShareIndex].quantity += Number(quantity);
+    } else {
+      // Add new share entry for the buyer
+      buyer.shares.push({
+        company_name: saleEntry.company_name,
+        quantity: Number(quantity),
+      });
+    }
+
+    await buyer.save(); // Save updated buyer information
+
+    res.status(200).json({
+      message: "Purchase successful",
+      remainingShares: saleEntry.quantity,
+      buyerShares: buyer.shares,
+    });
+  } catch (error) {
+    console.error(error); // Log error for debugging
+    res.status(400).json({ message: error.message });
+  }
+});
+
+const deleteShare = asyncHandler(async (req, res) => {
+  const { saleId } = req.body;
+  const { userId } = req.params;
+
+  try {
+    // Find the sale entry by ID
+    const saleEntry = await Sale.findById(saleId);
+    if (!saleEntry) {
+      return res.status(404).json({ message: "Sale entry not found" });
+    }
+
+    // Ensure that the user trying to delete the sale is the owner
+    if (saleEntry.user.toString() !== userId) {
+      return res
+        .status(403)
+        .json({ message: "You do not have permission to delete this sale" });
+    }
+
+    // Update user's shares
+    const user = await User.findById(userId);
+    const userShare = user.shares.find(
+      (share) =>
+        share.company_name.toString() === saleEntry.company_name.toString()
+    );
+
+    if (userShare) {
+      // If user has shares for this company, add back the quantity from the sale
+      userShare.quantity += saleEntry.quantity;
+    } else {
+      // If no existing share entry, create one for this company with the quantity from the sale
+      user.shares.push({
+        company_name: saleEntry.company_name,
+        quantity: saleEntry.quantity,
+      });
+    }
+
+    await user.save(); // Save updated user information
+
+    // Delete the sale entry
+    await Sale.findByIdAndDelete(saleId);
+
+    res
+      .status(200)
+      .json({ message: "Sale deleted and shares returned successfully" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+const getUserShare = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findById(userId)
+      .populate({
+        path: "shares.company_name",
+        select: "companyName total_shares",
+      })
+      .select("shares");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({
+      message: "User shares retrieved successfully",
+      shares: user.shares,
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while retrieving shares" });
   }
 });
 
@@ -183,4 +369,8 @@ module.exports = {
   viewProfile,
   deleteAccount,
   buyShare,
+  sellShare,
+  buyUsersShare,
+  deleteShare,
+  getUserShare,
 };
