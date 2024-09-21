@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
-const userSchema = mongoose.Schema(
+const adminSchema = mongoose.Schema(
   {
     username: {
       type: String,
@@ -12,7 +14,7 @@ const userSchema = mongoose.Schema(
     fullname: {
       type: String,
       required: [true, "full name is required"],
-      set: (v) => v.trim().replace(/\s+/g, " "),
+      trim: true,
     },
     email: {
       type: String,
@@ -53,14 +55,6 @@ const userSchema = mongoose.Schema(
           `Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character`,
       },
     },
-    role: {
-      type: String,
-      default: "user",
-    },
-    isBlocked: {
-      type: Boolean,
-      default: false,
-    },
     preference: {
       mode: {
         type: String,
@@ -73,18 +67,17 @@ const userSchema = mongoose.Schema(
         default: "en",
       },
     },
-    address: {
+    profile: {
       type: String,
-      set: (v) => v.trim().replace(/\s+/g, " "), // Trim and normalize address
     },
-    lastLoginIp: String, // Store the last login IP address
-    lastLoginAt: Date, // Store the last login timestamp
-    loginAttempts: {
-      type: Number,
-      default: 0,
-      select: false, // Hide this field by default
+    image: {
+      type: String,
+      default: "",
     },
-    lockUntil: Date, // Store the lock expiration date
+    role: {
+      type: String,
+      default: "administrator",
+    },
     refreshToken: { type: String },
     passwordChangedAt: Date,
     passwordResetToken: String,
@@ -95,7 +88,12 @@ const userSchema = mongoose.Schema(
   }
 );
 
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", function (next) {
+  this.role = "administrator";
+  next();
+});
+
+adminSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     next();
   }
@@ -108,16 +106,11 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-userSchema.pre("save", function (next) {
-  this.role = "user";
-  next();
-});
-
-userSchema.methods.isPasswordMatched = async function (enteredPassword) {
+adminSchema.methods.isPasswordMatched = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-userSchema.methods.createResetPasswordToken = async function () {
+adminSchema.methods.createResetPasswordToken = async function () {
   const resettoken = crypto.randomBytes(32).toString("hex");
   this.passwordResetToken = crypto
     .createHash("sha256")
@@ -130,4 +123,4 @@ userSchema.methods.createResetPasswordToken = async function () {
   return resettoken;
 };
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("Admin", adminSchema);
