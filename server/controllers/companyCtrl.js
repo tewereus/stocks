@@ -4,6 +4,7 @@ const { generateToken } = require("../config/jwtToken");
 const { generateRefreshToken } = require("../config/refreshToken");
 const Share = require("../models/shareModel");
 const Sale = require("../models/saleModel");
+const CompanyTransaction = require("../models/companyTransactionModel");
 
 // const register = asyncHandler(async (req, res) => {
 //   const { email } = req.body;
@@ -202,6 +203,19 @@ const getAllSales = asyncHandler(async (req, res) => {
   }
 });
 
+const getCompanyTransactions = asyncHandler(async (req, res) => {
+  const { companyId } = req.body;
+  try {
+    const transactions = await CompanyTransaction.find({ company: companyId });
+    res.status(200).json({
+      message: "Company transacations retrieved successfully",
+      transactions,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
   // register,
   // login,
@@ -211,4 +225,5 @@ module.exports = {
   addShares,
   deleteShares,
   getAllSales,
+  getCompanyTransactions,
 };

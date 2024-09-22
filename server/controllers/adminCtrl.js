@@ -5,6 +5,8 @@ const { generateToken } = require("../config/jwtToken");
 const { generateRefreshToken } = require("../config/refreshToken");
 const User = require("../models/userModel");
 const Sale = require("../models/saleModel");
+const UserTransaction = require("../models/userTransactionModel");
+const CompanyTransaction = require("../models/companyTransactionModel");
 
 const register = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -316,6 +318,34 @@ const getAllSales = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllUserTransactions = asyncHandler(async (req, res) => {
+  try {
+    const transactions = await UserTransaction.find();
+    res
+      .status(200)
+      .json({
+        message: "All user transacations retrieved successfully",
+        transactions,
+      });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const getAllCompanyTransactions = asyncHandler(async (req, res) => {
+  try {
+    const transactions = await CompanyTransaction.find();
+    res
+      .status(200)
+      .json({
+        message: "All company transacations retrieved successfully",
+        transactions,
+      });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
   register,
   login,
@@ -332,4 +362,6 @@ module.exports = {
   deleteCompany,
   updateCompany,
   getAllSales,
+  getAllUserTransactions,
+  getAllCompanyTransactions,
 };

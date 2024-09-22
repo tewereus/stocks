@@ -107,7 +107,7 @@ const deleteAccount = asyncHandler(async (req, res) => {
   }
 });
 
-const buyShare = asyncHandler(async (req, res) => {
+const buyCompanyShare = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const { shareId, numberOfShares } = req.body;
   try {
@@ -238,7 +238,6 @@ const buyUsersShare = asyncHandler(async (req, res) => {
 
   try {
     const saleEntry = await Sale.findById(saleId);
-    console.log(saleEntry);
     if (!saleEntry) {
       return res.status(404).json({ message: "Sale entry not found" });
     }
@@ -252,6 +251,16 @@ const buyUsersShare = asyncHandler(async (req, res) => {
     if (saleEntry.quantity < quantity) {
       return res.status(400).json({ message: "Not enough shares available" });
     }
+
+    const totalValue = quantity * Number(saleEntry.pricePerShare);
+
+    const transaction = await UserTransaction.create({
+      buyer: userId,
+      seller: saleEntry.user,
+      shares: quantity,
+      price: totalValue,
+    });
+
     saleEntry.quantity -= Number(quantity);
 
     // If all shares are sold, mark the sale as sold
@@ -385,16 +394,41 @@ const getAllSales = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllBoughtTransaction = asyncHandler(async (req, res) => {
+  const { userId } = req.body;
+  try {
+    //
+    const transaction = await UserTransaction.find({ buyer: userId });
+    console.log(transaction);
+    res.json(transaction);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const getAllSoldTransaction = asyncHandler(async (req, res) => {
+  const { userId } = req.body;
+  try {
+    //
+    const transaction = await UserTransaction.find({ seller: userId });
+    res.json(transaction);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
   register,
   login,
   logout,
   viewProfile,
   deleteAccount,
-  buyShare,
+  buyCompanyShare,
   sellShare,
   buyUsersShare,
   deleteShare,
   getUserShare,
   getAllSales,
+  getAllBoughtTransaction,
+  getAllSoldTransaction,
 };
