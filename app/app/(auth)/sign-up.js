@@ -20,8 +20,10 @@ const SignUp = () => {
 
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
-    name: "",
+    username: "",
+    fullname: "",
     email: "",
+    mobile: "",
     password: "",
   });
 
@@ -34,8 +36,10 @@ const SignUp = () => {
     setSubmitting(true);
     try {
       const data = {
-        name: form.name,
+        fullname: form.fullname,
+        username: form.username,
         email: form.email,
+        mobile: form.mobile,
         password: form.password,
       };
       dispatch(register(data));
@@ -88,9 +92,15 @@ const SignUp = () => {
           </Text>
 
           <FormField
-            title="name"
-            value={form.name}
-            handleChangeText={(e) => setForm({ ...form, name: e })}
+            title="username"
+            value={form.username}
+            handleChangeText={(e) => setForm({ ...form, username: e })}
+            otherStyles="mt-6"
+          />
+          <FormField
+            title="fullname"
+            value={form.fullname}
+            handleChangeText={(e) => setForm({ ...form, fullname: e })}
             otherStyles="mt-6"
           />
 
@@ -100,6 +110,13 @@ const SignUp = () => {
             handleChangeText={(e) => setForm({ ...form, email: e })}
             otherStyles="mt-7"
             keyboardType="email-address"
+          />
+
+          <FormField
+            title="Mobile"
+            value={form.mobile}
+            handleChangeText={(e) => setForm({ ...form, mobile: e })}
+            otherStyles="mt-7"
           />
 
           <FormField
