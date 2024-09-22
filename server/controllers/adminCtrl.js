@@ -4,6 +4,7 @@ const asyncHandler = require("express-async-handler");
 const { generateToken } = require("../config/jwtToken");
 const { generateRefreshToken } = require("../config/refreshToken");
 const User = require("../models/userModel");
+const Sale = require("../models/saleModel");
 
 const register = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -304,6 +305,17 @@ const updateCompany = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllSales = asyncHandler(async (req, res) => {
+  try {
+    const sales = await Sale.find();
+    res
+      .status(200)
+      .json({ message: "All sales retrieved successfully", sales });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
   register,
   login,
@@ -319,4 +331,5 @@ module.exports = {
   getCompanyInfo,
   deleteCompany,
   updateCompany,
+  getAllSales,
 };

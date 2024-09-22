@@ -5,6 +5,8 @@ const { generateRefreshToken } = require("../config/refreshToken");
 const Company = require("../models/companyModel");
 const Share = require("../models/shareModel");
 const Sale = require("../models/saleModel");
+const UserTransaction = require("../models/userTransactionModel");
+const CompanyTransaction = require("../models/companyTransactionModel");
 
 const register = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -128,9 +130,18 @@ const buyShare = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: "Not enough shares available" });
     }
 
+    const totalValue = sharesToBuy * share.pricePerShare;
+
+    // Add payment integration here, if success continue
+    const transaction = await CompanyTransaction.create({
+      buyer: userId,
+      company: share.company,
+      shares: sharesToBuy,
+      price: totalValue,
+    });
+
     share.availableShares -= sharesToBuy;
     await share.save();
-    const totalValue = sharesToBuy * share.pricePerShare;
     let user = await User.findById(userId);
 
     const existingShareIndex = user.shares.findIndex(
@@ -363,8 +374,9 @@ const getUserShare = asyncHandler(async (req, res) => {
 });
 
 const getAllSales = asyncHandler(async (req, res) => {
+  const { userId } = req.body;
   try {
-    const sales = await Sale.find();
+    const sales = await Sale.find({ user: userId });
     res
       .status(200)
       .json({ message: "All sales retrieved successfully", sales });

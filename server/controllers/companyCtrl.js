@@ -3,6 +3,7 @@ const asyncHandler = require("express-async-handler");
 const { generateToken } = require("../config/jwtToken");
 const { generateRefreshToken } = require("../config/refreshToken");
 const Share = require("../models/shareModel");
+const Sale = require("../models/saleModel");
 
 // const register = asyncHandler(async (req, res) => {
 //   const { email } = req.body;
@@ -189,6 +190,18 @@ const deleteShares = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllSales = asyncHandler(async (req, res) => {
+  const { companyId } = req.body;
+  try {
+    const sales = await Sale.find({ company_name: companyId });
+    res
+      .status(200)
+      .json({ message: "All sales retrieved successfully", sales });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
   // register,
   // login,
@@ -197,4 +210,5 @@ module.exports = {
   deleteAccount,
   addShares,
   deleteShares,
+  getAllSales,
 };

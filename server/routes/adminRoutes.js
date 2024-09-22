@@ -14,6 +14,7 @@ const {
   getCompanyInfo,
   deleteCompany,
   updateCompany,
+  getAllSales,
 } = require("../controllers/adminCtrl");
 
 const router = express.Router();
@@ -32,5 +33,6 @@ router.get("/get-companies", getAllCompanies);
 router.get("/get-company/:id", getCompanyInfo);
 router.delete("/delete-company/:id", deleteCompany);
 router.put("/update-company/:id", updateCompany);
+router.get("/all-sales", getAllSales);
 
 module.exports = router;

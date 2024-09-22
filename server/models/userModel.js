@@ -66,6 +66,7 @@ const userSchema = mongoose.Schema(
       {
         company_name: { type: mongoose.Schema.Types.ObjectId, ref: "Company" },
         quantity: { type: Number, default: 0 },
+        value: { type: Number, default: 0 },
       },
     ],
     refreshToken: { type: String },
