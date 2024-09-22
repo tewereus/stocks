@@ -1,0 +1,23 @@
+const mongoose = require("mongoose"); // Erase if already required
+
+// Declare the Schema of the Mongo model
+var companyTransactionSchema = new mongoose.Schema(
+  {
+    buyer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
+    shares: { type: Number, required: true },
+    price: { type: Number, required: true },
+  },
+  { timestamps: true }
+);
+
+//Export the model
+module.exports = mongoose.model("CompanyTransaction", companyTransactionSchema);
