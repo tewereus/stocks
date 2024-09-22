@@ -4,54 +4,54 @@ const { generateToken } = require("../config/jwtToken");
 const { generateRefreshToken } = require("../config/refreshToken");
 const Share = require("../models/shareModel");
 
-const register = asyncHandler(async (req, res) => {
-  const { email } = req.body;
-  try {
-    const userExists = await Company.findOne({ email });
-    if (!userExists) {
-      const user = await Company.create(req.body);
-      res.json(user);
-    } else {
-      res.status(401).json({ message: "user already exists" });
-    }
-  } catch (error) {
-    throw new Error(error);
-  }
-});
+// const register = asyncHandler(async (req, res) => {
+//   const { email } = req.body;
+//   try {
+//     const userExists = await Company.findOne({ email });
+//     if (!userExists) {
+//       const user = await Company.create(req.body);
+//       res.json(user);
+//     } else {
+//       res.status(401).json({ message: "user already exists" });
+//     }
+//   } catch (error) {
+//     throw new Error(error);
+//   }
+// });
 
-const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await Company.findOne({ email });
-    if (user && user.isPasswordMatched(password)) {
-      const refreshToken = await generateRefreshToken(user?._id);
-      const updateCompany = await Company.findByIdAndUpdate(
-        user.id,
-        { refreshToken: refreshToken },
-        { new: true }
-      );
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        sameSite: "strict",
-        maxAge: 72 * 60 * 60 * 1000,
-      });
-      res.json({
-        message: "logged in successfully",
-        _id: user?._id,
-        name: user?.fullname,
-        username: user?.username,
-        email: user?.email,
-        mobile: user?.mobile,
-        profile: user?.profile,
-        token: generateToken(user?._id),
-      });
-    } else {
-      throw new Error("invalid credentials");
-    }
-  } catch (error) {
-    throw new Error(error);
-  }
-});
+// const login = asyncHandler(async (req, res) => {
+//   const { email, password } = req.body;
+//   try {
+//     const user = await Company.findOne({ email });
+//     if (user && user.isPasswordMatched(password)) {
+//       const refreshToken = await generateRefreshToken(user?._id);
+//       const updateCompany = await Company.findByIdAndUpdate(
+//         user.id,
+//         { refreshToken: refreshToken },
+//         { new: true }
+//       );
+//       res.cookie("refreshToken", refreshToken, {
+//         httpOnly: true,
+//         sameSite: "strict",
+//         maxAge: 72 * 60 * 60 * 1000,
+//       });
+//       res.json({
+//         message: "logged in successfully",
+//         _id: user?._id,
+//         name: user?.fullname,
+//         username: user?.username,
+//         email: user?.email,
+//         mobile: user?.mobile,
+//         profile: user?.profile,
+//         token: generateToken(user?._id),
+//       });
+//     } else {
+//       throw new Error("invalid credentials");
+//     }
+//   } catch (error) {
+//     throw new Error(error);
+//   }
+// });
 
 const logout = asyncHandler(async (req, res) => {
   const cookie = req.cookies;
@@ -179,12 +179,10 @@ const deleteShares = asyncHandler(async (req, res) => {
     // Delete the share entry
     await Share.findByIdAndDelete(shareId);
 
-    res
-      .status(200)
-      .json({
-        message:
-          "Share deleted successfully, remaining shares returned to company",
-      });
+    res.status(200).json({
+      message:
+        "Share deleted successfully, remaining shares returned to company",
+    });
   } catch (error) {
     console.error(error); // Log error for debugging
     return res.status(400).json({ message: error.message });
@@ -192,8 +190,8 @@ const deleteShares = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  register,
-  login,
+  // register,
+  // login,
   logout,
   viewProfile,
   deleteAccount,

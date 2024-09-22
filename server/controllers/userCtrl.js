@@ -362,6 +362,17 @@ const getUserShare = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllSales = asyncHandler(async (req, res) => {
+  try {
+    const sales = await Sale.find();
+    res
+      .status(200)
+      .json({ message: "All sales retrieved successfully", sales });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
   register,
   login,
@@ -373,4 +384,5 @@ module.exports = {
   buyUsersShare,
   deleteShare,
   getUserShare,
+  getAllSales,
 };

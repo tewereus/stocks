@@ -82,7 +82,7 @@ const logout = asyncHandler(async (req, res) => {
 });
 
 const viewProfile = asyncHandler(async (req, res) => {
-  const { id } = req.user;
+  const { id } = req.params;
   try {
     const user = await Admin.findById(id).select("-password");
     res.json(user);
@@ -93,7 +93,6 @@ const viewProfile = asyncHandler(async (req, res) => {
 
 const getaUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  validateMongoDbId(id);
 
   try {
     const user = await User.findById(id);
@@ -107,7 +106,6 @@ const getaUser = asyncHandler(async (req, res) => {
 
 const blockUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  validateMongoDbId(id);
 
   try {
     const blockUser = await User.findByIdAndUpdate(
@@ -130,7 +128,6 @@ const blockUser = asyncHandler(async (req, res) => {
 
 const unblockUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  validateMongoDbId(id);
 
   try {
     const unblockUser = await User.findByIdAndUpdate(
