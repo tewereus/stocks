@@ -1,8 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useDispatch } from "react-redux";
+import { getBoughtCompanyTransaction } from "../../store/user/userSlice";
 
 const explore = () => {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(getBoughtCompanyTransaction());
+  }, []);
   const transactions = [
     {
       id: "1",

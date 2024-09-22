@@ -13,6 +13,8 @@ const {
   buyCompanyShare,
   getAllBoughtTransaction,
   getAllSoldTransaction,
+  getAllShares,
+  getBoughtCompanyTransaction,
 } = require("../controllers/userCtrl");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 const router = express.Router();
@@ -28,7 +30,9 @@ router.post("/buy-user-share/:userId", buyUsersShare);
 router.delete("/delete-share/:userId", deleteShare);
 router.get("/users-share/:userId", getUserShare);
 router.get("/all-sales", getAllSales);
+router.get("/all-shares", getAllShares);
 router.get("/all-bought-transaction", getAllBoughtTransaction);
+router.get("/bought-company-transaction", getBoughtCompanyTransaction);
 router.get("/all-sold-transaction", getAllSoldTransaction);
 
 module.exports = router;

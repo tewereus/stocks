@@ -1,18 +1,25 @@
-import { View, Text, FlatList, ScrollView } from "react-native";
-import React from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import BankCard from "../../components/BankCard";
 import Avatar from "../../components/Avatar";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getAllShares } from "../../store/user/userSlice";
 
 const Home = () => {
-  // Sample data for available shares (or banks)
-  const banks = [
-    { id: "1", name: "Bank A", details: "Available for all transactions" },
-    { id: "2", name: "Bank B", details: "Low fees and great service" },
-    { id: "3", name: "Bank C", details: "Best savings account rates" },
-    { id: "4", name: "Bank D", details: "24/7 customer support" },
-    { id: "5", name: "Bank E", details: "Great investment options" },
-  ];
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(getAllShares());
+  }, [dispatch]);
+
+  const { shares, isLoading } = useSelector((state) => state.user);
 
   const avatarImages = {
     avatar1: require("../../assets/images/CBE.png"),
@@ -53,16 +60,22 @@ const Home = () => {
           <Text className="text-black text-lg font-bold mb-4 mt-5">
             Available Shares
           </Text>
-          <FlatList
-            data={banks}
-            renderItem={({ item }) => <BankCard bank={item} />}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={150} // Adjust based on card width for snapping effect
-            decelerationRate="fast" // Smooth scrolling effect
-            contentContainerStyle={{ paddingBottom: 20 }} // Padding at the bottom
-          />
+
+          {/* Loading State */}
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#0000ff" />
+          ) : (
+            <FlatList
+              data={shares} // Use shares data here
+              renderItem={({ item }) => <BankCard bank={item} />} // Render each share as a BankCard
+              keyExtractor={(item) => item._id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={150} // Adjust based on card width for snapping effect
+              decelerationRate="fast" // Smooth scrolling effect
+              contentContainerStyle={{ paddingBottom: 20 }} // Padding at the bottom
+            />
+          )}
 
           {/* Additional Content */}
           <Text className="text-center text-gray-600 mt-10">hello</Text>

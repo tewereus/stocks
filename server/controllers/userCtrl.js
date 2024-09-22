@@ -356,6 +356,18 @@ const deleteShare = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllShares = asyncHandler(async (req, res) => {
+  try {
+    const shares = await Share.find().populate({
+      path: "company",
+      select: "companyName -_id",
+    });
+    res.json(shares);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 const getUserShare = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
@@ -393,7 +405,18 @@ const getAllSales = asyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
-
+const getBoughtCompanyTransaction = asyncHandler(async (req, res) => {
+  const { userId } = req.body;
+  try {
+    const transaction = await CompanyTransaction.find({ buyer: userId });
+    res.status(200).json({
+      message: "Company traction retrieved successfully",
+      transaction,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
 const getAllBoughtTransaction = asyncHandler(async (req, res) => {
   const { userId } = req.body;
   try {
@@ -428,7 +451,9 @@ module.exports = {
   buyUsersShare,
   deleteShare,
   getUserShare,
+  getAllShares,
   getAllSales,
+  getBoughtCompanyTransaction,
   getAllBoughtTransaction,
   getAllSoldTransaction,
 };
