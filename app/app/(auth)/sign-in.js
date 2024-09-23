@@ -17,15 +17,15 @@ const SignIn = () => {
     password: "",
   });
 
-  const { isSuccess, isError } = useSelector((state) => state.auth);
+  const { isSuccess, isError, user } = useSelector((state) => state.auth);
 
   const submit = () => {
     const data = {
       email: form.email,
       password: form.password,
     };
-    // dispatch(login(data));
-    router.push("/home");
+    dispatch(login(data));
+    // router.push("/home");
   };
 
   useEffect(() => {
@@ -33,7 +33,7 @@ const SignIn = () => {
       Toast.show({
         type: "success",
         text1: "Success",
-        text2: "User created successfully",
+        text2: "User logged in successfully",
       });
       router.push("/home");
       dispatch(resetAuthState()); // Dispatch resetAuthState after navigation
@@ -42,7 +42,7 @@ const SignIn = () => {
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: "An error occurred during registration.",
+        text2: "An error occurred during login.",
       });
       dispatch(resetAuthState()); // Dispatch resetAuthState on error
     }

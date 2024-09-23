@@ -1,12 +1,30 @@
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { images } from "../constants";
 import CustomButton from "../components/CustomButton";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch } from "react-redux";
+import { loadUser } from "../store/auth/authSlice";
 
 const index = () => {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(loadUser());
+  }, [dispatch]);
+
+  const handlePress = async () => {
+    const user = await AsyncStorage.getItem("user");
+    console.log(user);
+    if (user) {
+      router.push("/home");
+    } else {
+      router.push("/sign-in");
+    }
+  };
+
   return (
     <SafeAreaView className="bg-[#09092B] h-full">
       <ScrollView
@@ -46,7 +64,7 @@ const index = () => {
           {/* <CustomButton title="Continue with Email"/> */}
           <CustomButton
             title="Get Started"
-            handlePress={() => router.push("/sign-in")}
+            handlePress={handlePress}
             containerStyles="w-full mt-10"
           />
         </View>

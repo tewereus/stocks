@@ -13,6 +13,11 @@ var userTransactionSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
     shares: { type: Number, required: true },
     price: { type: Number, required: true },
   },

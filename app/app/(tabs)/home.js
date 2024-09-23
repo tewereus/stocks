@@ -11,6 +11,7 @@ import BankCard from "../../components/BankCard";
 import Avatar from "../../components/Avatar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getAllShares } from "../../store/user/userSlice";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -20,6 +21,7 @@ const Home = () => {
   }, [dispatch]);
 
   const { shares, isLoading } = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.auth);
 
   const avatarImages = {
     avatar1: require("../../assets/images/CBE.png"),
@@ -37,13 +39,25 @@ const Home = () => {
     { id: "5", uri: avatarImages.avatar5 },
   ];
 
+  const handlepress = async () => {
+    console.log("pressed");
+    setTest(!test);
+    // const data = await AsyncStorage.getItem("user");
+    // console.log("data: ", data);
+    // console.log("user: ", user);
+    // console.log("pres");
+    // console.log(shares);
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-[#f5f5f5]">
       <ScrollView>
         <View className="w-full p-4">
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-black text-2xl font-bold">Trade</Text>
-            <Text className="text-black text-xl">userName</Text>
+            <Text className="text-black text-xl" onPress={handlepress}>
+              {user.name}
+            </Text>
           </View>
 
           {/* Avatars Section */}

@@ -180,10 +180,12 @@ const sellShare = asyncHandler(async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    const userShare = user.shares.find(
-      (share) => share.company_name.toString() === companyId
-    );
+    // console.log(user.shares.company_name);
+    const userShare = user.shares.find((share) => {
+      return share.company_name.toString() === companyId;
+    });
+    console.log("usershare: ", userShare);
+    console.log("quantity: ", quantity);
     if (!userShare || userShare.quantity < quantity) {
       return res
         .status(400)
@@ -257,6 +259,7 @@ const buyUsersShare = asyncHandler(async (req, res) => {
     const transaction = await UserTransaction.create({
       buyer: userId,
       seller: saleEntry.user,
+      company: saleEntry.company_name,
       shares: quantity,
       price: totalValue,
     });
@@ -394,7 +397,7 @@ const getUserShare = asyncHandler(async (req, res) => {
   }
 });
 
-const getAllSales = asyncHandler(async (req, res) => {
+const getAllUsersSales = asyncHandler(async (req, res) => {
   const { userId } = req.body;
   try {
     const sales = await Sale.find({ user: userId });
@@ -405,18 +408,79 @@ const getAllSales = asyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
-const getBoughtCompanyTransaction = asyncHandler(async (req, res) => {
+
+const getAllSales = asyncHandler(async (req, res) => {
   const { userId } = req.body;
   try {
-    const transaction = await CompanyTransaction.find({ buyer: userId });
+    const sales = await Sale.find({ user: { $ne: userId } });
+
+    res
+      .status(200)
+      .json({ message: "All sales retrieved successfully", sales });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while retrieving sales" });
+  }
+});
+
+const getBoughtCompanyTransaction = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  try {
+    const transaction = await CompanyTransaction.find({ buyer: id }).populate({
+      path: "company",
+      select: "companyName -_id",
+    });
+    const totalTransactions = transaction.length;
     res.status(200).json({
-      message: "Company traction retrieved successfully",
+      message: "Company transaction retrieved successfully",
       transaction,
+      totalTransactions,
     });
   } catch (error) {
     throw new Error(error);
   }
 });
+
+const getBoughtUsersTransaction = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  console.log(id);
+  try {
+    const transaction = await UserTransaction.find({ buyer: id })
+      .populate({ path: "seller", select: "fullname -_id" })
+      .populate({ path: "company", select: "companyName -_id" });
+    const totalTransactions = transaction.length;
+    console.log(totalTransactions);
+    res.status(200).json({
+      message: "Company transaction retrieved successfully",
+      transaction,
+      totalTransactions,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const getSoldUsersTransaction = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  console.log(id);
+  try {
+    const transaction = await UserTransaction.find({ seller: id })
+      .populate({ path: "buyer", select: "fullname -_id" })
+      .populate({ path: "company", select: "companyName -_id" });
+    const totalTransactions = transaction.length;
+    console.log(totalTransactions);
+    res.status(200).json({
+      message: "Company transaction retrieved successfully",
+      transaction,
+      totalTransactions,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 const getAllBoughtTransaction = asyncHandler(async (req, res) => {
   const { userId } = req.body;
   try {
@@ -452,8 +516,11 @@ module.exports = {
   deleteShare,
   getUserShare,
   getAllShares,
+  getAllUsersSales,
   getAllSales,
   getBoughtCompanyTransaction,
+  getBoughtUsersTransaction,
+  getSoldUsersTransaction,
   getAllBoughtTransaction,
   getAllSoldTransaction,
 };

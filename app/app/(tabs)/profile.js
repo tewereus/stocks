@@ -1,14 +1,26 @@
+// Profile.js
 import React from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useDispatch } from "react-redux";
+import { logout } from "../../store/auth/authSlice"; // Adjust path as necessary
+import { useRouter } from "expo-router"; // Use expo-router for navigation
 
 const Profile = () => {
-  // Sample user data
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  // Sample user data (you may want to retrieve this from Redux store)
   const userData = {
     name: "John Doe",
     email: "john.doe@example.com",
     phone: "+123456789",
     profilePicture: "https://via.placeholder.com/150", // Placeholder image
+  };
+
+  const handleLogout = () => {
+    dispatch(logout()); // Dispatch logout action
+    router.push("index"); // Navigate to sign-in screen after logout
   };
 
   return (
@@ -42,7 +54,10 @@ const Profile = () => {
           <TouchableOpacity className="bg-blue-500 px-4 py-2 rounded flex-1 mr-2">
             <Text className="text-white text-center">Message</Text>
           </TouchableOpacity>
-          <TouchableOpacity className="bg-red-500 px-4 py-2 rounded flex-1 ml-2">
+          <TouchableOpacity
+            onPress={handleLogout}
+            className="bg-red-500 px-4 py-2 rounded flex-1 ml-2"
+          >
             <Text className="text-white text-center">Logout</Text>
           </TouchableOpacity>
         </View>

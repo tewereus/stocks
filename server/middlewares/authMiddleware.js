@@ -6,6 +6,8 @@ const Company = require("../models/companyModel");
 
 const authMiddleware = asyncHandler(async (req, res, next) => {
   let token;
+  // console.log("here at authMiddleware");
+  // console.log(req.headers.authorization);
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
