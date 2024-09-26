@@ -80,11 +80,106 @@ const getSoldUsersTransaction = async () => {
   return response.data;
 };
 
+const getAllSales = async () => {
+  const userData = await AsyncStorage.getItem("user");
+  const getTokenFromLocalStorage = userData ? JSON.parse(userData) : null;
+
+  const headers = {
+    Authorization: `Bearer ${
+      getTokenFromLocalStorage ? getTokenFromLocalStorage.token : ""
+    }`,
+    // Accept: "application/json",
+  };
+
+  const response = await axios.get(`${baseUrl}/user/all-sales`, {
+    headers,
+    withCredentials: true,
+  });
+  return response.data;
+};
+
+const getCompaniesShare = async () => {
+  const userData = await AsyncStorage.getItem("user");
+  const getTokenFromLocalStorage = userData ? JSON.parse(userData) : null;
+
+  const headers = {
+    Authorization: `Bearer ${
+      getTokenFromLocalStorage ? getTokenFromLocalStorage.token : ""
+    }`,
+    // Accept: "application/json",
+  };
+
+  const response = await axios.get(`${baseUrl}/user/users-company-shares`, {
+    headers,
+    withCredentials: true,
+  });
+  return response.data;
+};
+
+const sellShare = async (data) => {
+  const userData = await AsyncStorage.getItem("user");
+  const getTokenFromLocalStorage = userData ? JSON.parse(userData) : null;
+
+  const headers = {
+    Authorization: `Bearer ${
+      getTokenFromLocalStorage ? getTokenFromLocalStorage.token : ""
+    }`,
+    // Accept: "application/json",
+  };
+
+  const response = await axios.post(`${baseUrl}/user/sell-share`, data, {
+    headers,
+    withCredentials: true,
+  });
+  return response.data;
+};
+
+const buyUsersShare = async (data) => {
+  const userData = await AsyncStorage.getItem("user");
+  const getTokenFromLocalStorage = userData ? JSON.parse(userData) : null;
+
+  const headers = {
+    Authorization: `Bearer ${
+      getTokenFromLocalStorage ? getTokenFromLocalStorage.token : ""
+    }`,
+    // Accept: "application/json",
+  };
+
+  const response = await axios.post(`${baseUrl}/user/buy-user-share`, data, {
+    headers,
+    withCredentials: true,
+  });
+  return response.data;
+};
+
+const buyCompanyShare = async (data) => {
+  const userData = await AsyncStorage.getItem("user");
+  const getTokenFromLocalStorage = userData ? JSON.parse(userData) : null;
+
+  const headers = {
+    Authorization: `Bearer ${
+      getTokenFromLocalStorage ? getTokenFromLocalStorage.token : ""
+    }`,
+    // Accept: "application/json",
+  };
+
+  const response = await axios.post(`${baseUrl}/user/buy-company-share`, data, {
+    headers,
+    withCredentials: true,
+  });
+  return response.data;
+};
+
 const userService = {
   getAllShares,
   getBoughtCompanyTransaction,
   getBoughtUsersTransaction,
   getSoldUsersTransaction,
+  getAllSales,
+  getCompaniesShare,
+  sellShare,
+  buyUsersShare,
+  buyCompanyShare,
 };
 
 export default userService;

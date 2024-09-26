@@ -55,21 +55,6 @@ const TabsLayout = () => {
           }}
         />
         <Tabs.Screen
-          name="explore"
-          options={{
-            title: "Explore",
-            headerShown: false,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                icon={images.explore}
-                color={color}
-                name="explore"
-                focused={focused}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
           name="p2p"
           options={{
             title: "P2P",
@@ -79,6 +64,21 @@ const TabsLayout = () => {
                 icon={images.p2p}
                 color={color}
                 name="p2p"
+                focused={focused}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="explore"
+          options={{
+            title: "Explore",
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon={images.explore}
+                color={color}
+                name="explore"
                 focused={focused}
               />
             ),

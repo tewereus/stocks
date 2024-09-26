@@ -108,7 +108,7 @@ const deleteAccount = asyncHandler(async (req, res) => {
 });
 
 const buyCompanyShare = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  const { id } = req.user;
   const { shareId, numberOfShares } = req.body;
   try {
     const share = await Share.findById(shareId);
@@ -134,7 +134,7 @@ const buyCompanyShare = asyncHandler(async (req, res) => {
 
     // Add payment integration here, if success continue
     const transaction = await CompanyTransaction.create({
-      buyer: userId,
+      buyer: id,
       company: share.company,
       shares: sharesToBuy,
       price: totalValue,
@@ -142,7 +142,7 @@ const buyCompanyShare = asyncHandler(async (req, res) => {
 
     share.availableShares -= sharesToBuy;
     await share.save();
-    let user = await User.findById(userId);
+    let user = await User.findById(id);
 
     const existingShareIndex = user.shares.findIndex(
       (s) => s.company_name.toString() === share.company.toString()
@@ -172,27 +172,40 @@ const buyCompanyShare = asyncHandler(async (req, res) => {
 });
 
 const sellShare = asyncHandler(async (req, res) => {
-  const { companyId, quantity, pricePerShare, minSharesToBuy } = req.body;
-  const { userId } = req.params; // Assuming userId is passed in the request parameters
+  const { company, quantity, pricePerShare, minSharesToBuy } = req.body;
+  const { id } = req.user; // Assuming userId is passed in the request parameters
 
   try {
-    const user = await User.findById(userId);
+    const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    // console.log(user.shares.company_name);
+
+    const companyDocument = await Company.findOne({
+      companyName: company,
+    }).select("_id");
+    if (!companyDocument) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    const companyId = companyDocument._id; // Extract the _id from the found company document
+
+    // Find user's share for the specific company
     const userShare = user.shares.find((share) => {
-      return share.company_name.toString() === companyId;
+      return share.company_name.toString() === companyId.toString(); // Ensure both are strings for comparison
     });
+
     console.log("usershare: ", userShare);
     console.log("quantity: ", quantity);
-    if (!userShare || userShare.quantity < quantity) {
+
+    if (!userShare || userShare.quantity < Number(quantity)) {
       return res
         .status(400)
         .json({ message: "You do not have enough shares to sell" });
     }
+
     let existingSale = await Sale.findOne({
-      user: userId,
+      user: id, // Use user ID directly
       company_name: companyId,
       status: "available",
     });
@@ -206,7 +219,7 @@ const sellShare = asyncHandler(async (req, res) => {
       await existingSale.save();
     } else {
       const newSale = new Sale({
-        user: userId,
+        user: id,
         company_name: companyId,
         quantity,
         pricePerShare,
@@ -215,11 +228,13 @@ const sellShare = asyncHandler(async (req, res) => {
 
       await newSale.save(); // Save the new sale entry
     }
+
     userShare.quantity -= Number(quantity);
+
     // If all shares are sold for this company, remove it from user's shares
     if (userShare.quantity === 0) {
       user.shares = user.shares.filter(
-        (share) => share.company_name.toString() !== companyId
+        (share) => share.company_name.toString() !== companyId.toString()
       );
     }
 
@@ -230,12 +245,13 @@ const sellShare = asyncHandler(async (req, res) => {
       sale: existingSale || newSale,
     });
   } catch (error) {
+    console.error("Error selling share:", error);
     res.status(400).json({ message: error.message });
   }
 });
 
 const buyUsersShare = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  const { id } = req.user;
   const { quantity, saleId } = req.body;
 
   try {
@@ -257,7 +273,7 @@ const buyUsersShare = asyncHandler(async (req, res) => {
     const totalValue = quantity * Number(saleEntry.pricePerShare);
 
     const transaction = await UserTransaction.create({
-      buyer: userId,
+      buyer: id,
       seller: saleEntry.user,
       company: saleEntry.company_name,
       shares: quantity,
@@ -268,15 +284,13 @@ const buyUsersShare = asyncHandler(async (req, res) => {
 
     // If all shares are sold, mark the sale as sold
     if (saleEntry.quantity === 0) {
-      saleEntry.status = "sold"; // Mark as sold
-      // or you can also delete the entry if it doesn't need to be in the database
-      // await Sale.findByIdAndDelete(saleId);
+      saleEntry.status = "sold";
     }
 
     await saleEntry.save(); // Save updated sale entry
 
     // Update buyer's shares
-    const buyer = await User.findById(userId);
+    const buyer = await User.findById(id);
     if (!buyer) {
       return res.status(404).json({ message: "Buyer not found" });
     }
@@ -365,6 +379,7 @@ const getAllShares = asyncHandler(async (req, res) => {
       path: "company",
       select: "companyName -_id",
     });
+    console.log(shares);
     res.json(shares);
   } catch (error) {
     throw new Error(error);
@@ -410,9 +425,17 @@ const getAllUsersSales = asyncHandler(async (req, res) => {
 });
 
 const getAllSales = asyncHandler(async (req, res) => {
-  const { userId } = req.body;
+  const { id } = req.user;
   try {
-    const sales = await Sale.find({ user: { $ne: userId } });
+    const sales = await Sale.find({ user: { $ne: id } })
+      .populate({
+        path: "company_name",
+        select: "companyName -_id",
+      })
+      .populate({
+        path: "user",
+        select: "fullname -_id",
+      });
 
     res
       .status(200)
@@ -472,7 +495,7 @@ const getSoldUsersTransaction = asyncHandler(async (req, res) => {
     const totalTransactions = transaction.length;
     console.log(totalTransactions);
     res.status(200).json({
-      message: "Company transaction retrieved successfully",
+      message: "user sold transaction retrieved successfully",
       transaction,
       totalTransactions,
     });
@@ -504,6 +527,65 @@ const getAllSoldTransaction = asyncHandler(async (req, res) => {
   }
 });
 
+// shares the user have in a company
+const getCompaniesShare = asyncHandler(async (req, res) => {
+  const { id } = req.user; // Assuming req.user contains the authenticated user's ID
+  try {
+    // Find the user by ID and populate shares with company details
+    const user = await User.findById(id).populate({
+      path: "shares.company_name", // Populate company_name field in shares
+      select: "companyName", // Select only the companyName field
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const companies = user.shares.map(
+      (share) => share.company_name.companyName
+    );
+    // const companyIds = user.shares.map((share) => share.company_name._id);
+
+    // console.log("Company Names:", companyNames);
+    // console.log("Company IDs:", companyIds);
+
+    res.status(200).json({
+      companies,
+    });
+  } catch (error) {
+    console.error("Error retrieving companies' shares:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// const getCompaniesShare = asyncHandler(async (req, res) => {
+//   const { id } = req.user; // Assuming req.user contains the authenticated user's ID
+//   try {
+//     // Find the user by ID and populate shares with company details
+//     const user = await User.findById(id).populate({
+//       path: "shares.company_name", // Populate company_name field in shares
+//       select: "companyName", // Select only the companyName field
+//     });
+
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     // Extract company names and IDs from shares
+//     const companies = user.shares.map((share) => ({
+//       id: share.company_name._id, // Get the company ID
+//       companyName: share.company_name.companyName, // Get the company name
+//     }));
+
+//     res.status(200).json({
+//       companies, // Return array of companies with IDs and names
+//     });
+//   } catch (error) {
+//     console.error("Error retrieving companies' shares:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
 module.exports = {
   register,
   login,
@@ -523,4 +605,5 @@ module.exports = {
   getSoldUsersTransaction,
   getAllBoughtTransaction,
   getAllSoldTransaction,
+  getCompaniesShare,
 };
