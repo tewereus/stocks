@@ -6,18 +6,18 @@ import {
   Modal,
   TouchableOpacity,
   FlatList,
-  StyleSheet,
+  SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
-import Toast from "react-native-toast-message";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  buyUsersShare,
   getAllSales,
   getCompaniesShare,
-  resetAuthState,
   sellShare,
+  buyUsersShare,
 } from "../../store/user/userSlice";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 
 const P2P = () => {
   const dispatch = useDispatch();
@@ -104,211 +104,220 @@ const P2P = () => {
     });
   };
 
-  // const renderSaleCard = ({ item }) => (
-  //   <View className="bg-white rounded-lg p-4 mb-4 w-full flex-row justify-between shadow-md">
-  //     <View className="flex">
-  //       <Text className="font-semibold ">{item.company_name.companyName}</Text>
-  //       <Text className="text-sm font-normal text-gray-600">
-  //         {item.user.fullname}
-  //       </Text>
-  //       <Text className="text-gray-600">
-  //         posted: {new Date(item.createdAt).toLocaleDateString()}
-  //       </Text>
-  //     </View>
-  //     <View>
-  //       <Text className="text-gray-600">Shares: {item.quantity}</Text>
-  //       <Text className="text-gray-800">per Share: {item.pricePerShare}$</Text>
-  //       <Text className="text-gray-800">Min Share: {item.minSharesToBuy}</Text>
-  //     </View>
-  //   </View>
-  // );
-
   const renderSaleCard = ({ item }) => (
-    <TouchableOpacity onPress={() => handleSalePress(item)}>
-      <View className="bg-white rounded-lg p-4 mb-4 w-full flex-row justify-between shadow-md">
-        <View className="flex">
-          <Text className="font-semibold">{item.company_name.companyName}</Text>
-          <Text className="text-sm font-normal text-gray-600">
-            {item.user.fullname}
-          </Text>
-          <Text className="text-gray-600">
-            posted: {new Date(item.createdAt).toLocaleDateString()}
-          </Text>
+    <TouchableOpacity onPress={() => handleSalePress(item)} className="mb-4">
+      <LinearGradient
+        colors={["#ffffff", "#f8f9fa"]}
+        className="rounded-xl p-5 shadow-lg"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 5,
+        }}
+      >
+        <View className="flex-row justify-between items-start">
+          <View className="flex-1">
+            <Text className="text-xl font-bold text-black-100 mb-1">
+              {item?.company_name?.companyName}
+            </Text>
+            <View className="flex-row items-center">
+              <Ionicons
+                name="person-circle-outline"
+                size={16}
+                color="#6B7280"
+              />
+              <Text className="text-gray-500 ml-1">{item?.user?.fullname}</Text>
+            </View>
+          </View>
+          <View className="bg-secondary/10 px-3 py-1 rounded-full">
+            <Text className="text-secondary font-semibold">Available</Text>
+          </View>
         </View>
-        <View>
-          <Text className="text-gray-600">Shares: {item.quantity}</Text>
-          <Text className="text-gray-800">
-            per Share: {item.pricePerShare}$
-          </Text>
-          <Text className="text-gray-800">
-            Min Share: {item.minSharesToBuy}
-          </Text>
+
+        <View className="flex-row justify-between mt-4">
+          <View className="bg-gray-50 p-3 rounded-lg flex-1 mr-2">
+            <Text className="text-gray-500 text-sm">Shares</Text>
+            <Text className="text-lg font-semibold">{item?.quantity}</Text>
+          </View>
+          <View className="bg-gray-50 p-3 rounded-lg flex-1 mx-2">
+            <Text className="text-gray-500 text-sm">Price/Share</Text>
+            <Text className="text-lg font-semibold">
+              ${item?.pricePerShare}
+            </Text>
+          </View>
+          <View className="bg-gray-50 p-3 rounded-lg flex-1 ml-2">
+            <Text className="text-gray-500 text-sm">Min Shares</Text>
+            <Text className="text-lg font-semibold">
+              {item?.minSharesToBuy}
+            </Text>
+          </View>
         </View>
-      </View>
+
+        <Text className="text-gray-400 text-xs mt-4">
+          Posted {new Date(item?.createdAt).toLocaleDateString()}
+        </Text>
+      </LinearGradient>
     </TouchableOpacity>
   );
 
   return (
-    // #c3c3c3
-    <SafeAreaView className="flex-1 bg-[#09092B] p-4">
-      <View className="flex-row justify-between items-center mb-4">
-        <Text className="text-white text-xl font-bold" onPress={handlePress}>
-          Trade
-        </Text>
-        <TouchableOpacity
-          className="bg-blue-500 px-4 py-2 rounded"
-          onPress={() => setModalVisible(true)}
-        >
-          <Text className="text-white">Post Share</Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView className="flex-1 bg-[#f8fafc]">
+      <View className="p-4">
+        {/* Header */}
+        <View className="flex-row justify-between items-center mb-6">
+          <View>
+            <Text className="text-3xl font-bold text-black-100">Trade</Text>
+            <Text className="text-gray-500">Buy and sell shares</Text>
+          </View>
+          <TouchableOpacity
+            className="bg-secondary px-4 py-3 rounded-xl"
+            onPress={() => setModalVisible(true)}
+          >
+            <Text className="text-white font-semibold">Post Share</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Search and Filter Section */}
-      <View className="flex-row justify-between items-center mb-4">
-        <TextInput
-          placeholder="Search..."
-          placeholderTextColor="#aaa"
-          className="bg-white rounded-lg p-2 flex-1 mr-2"
+        {/* Search and Filter Section */}
+        <View className="flex-row justify-between items-center mb-6">
+          <View className="flex-row items-center flex-1 bg-white rounded-xl p-3 mr-3 shadow-sm">
+            <Ionicons name="search-outline" size={20} color="#6B7280" />
+            <TextInput
+              placeholder="Search shares..."
+              placeholderTextColor="#9CA3AF"
+              className="flex-1 ml-2 text-black-100"
+            />
+          </View>
+          <TouchableOpacity
+            className="bg-black-100 p-3 rounded-xl"
+            onPress={handlePresss}
+          >
+            <Ionicons name="filter" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Sales List */}
+        <FlatList
+          data={salesData}
+          renderItem={renderSaleCard}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          showsVerticalScrollIndicator={false}
         />
-        <TouchableOpacity className="bg-blue-500 px-4 py-2 rounded">
-          <Text className="text-white" onPress={handlePresss}>
-            Filter
-          </Text>
-        </TouchableOpacity>
       </View>
 
-      {/* Dynamic Cards Section
-      <FlatList
-        data={salesData}
-        renderItem={renderSaleCard}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={{ paddingBottom: 20 }} // Optional padding at the bottom
-        showsVerticalScrollIndicator={false} // Optional to hide scroll indicator
-      /> */}
-
-      <FlatList
-        data={salesData}
-        renderItem={renderSaleCard}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={{ paddingBottom: 20 }} // Optional padding at the bottom
-        showsVerticalScrollIndicator={false} // Optional to hide scroll indicator
-      />
-
-      {/* Modal for Buying Shares */}
+      {/* Buy Shares Modal */}
       <Modal
         animationType="slide"
         transparent={true}
         visible={saleModalVisible}
-        onRequestClose={() => {
-          setModalVisible(!saleModalVisible);
-        }}
+        onRequestClose={() => setSaleModalVisible(false)}
       >
-        <View className="flex-1 justify-end bg-black bg-opacity-50">
-          <View className="w-full bg-white rounded-t-lg p-5">
-            <Text className="text-lg font-bold mb-4">Buy Shares</Text>
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-3xl p-6">
+            <View className="flex-row justify-between items-center mb-6">
+              <Text className="text-2xl font-bold">Buy Shares</Text>
+              <TouchableOpacity onPress={() => setSaleModalVisible(false)}>
+                <Ionicons name="close-circle" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
 
-            <TextInput
-              placeholder="Quantity"
-              value={quantity}
-              onChangeText={setQuantity}
-              keyboardType="numeric"
-              className="bg-gray-200 p-2 rounded mb-3"
-            />
+            <View className="bg-gray-50 rounded-xl p-4 mb-6">
+              <TextInput
+                placeholder="Enter quantity"
+                value={quantity}
+                onChangeText={setQuantity}
+                keyboardType="numeric"
+                className="text-lg"
+              />
+            </View>
 
             <TouchableOpacity
               onPress={handleBuyShares}
-              className="bg-blue-500 p-2 rounded mb-2"
+              className="bg-secondary rounded-xl p-4 mb-3"
             >
-              <Text className="text-white text-center">Confirm Purchase</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setSaleModalVisible(false)}
-              className="bg-red-500 p-2 rounded"
-            >
-              <Text className="text-white text-center">Cancel</Text>
+              <Text className="text-white text-center font-semibold text-lg">
+                Confirm Purchase
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
+      {/* Post Share Modal */}
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(!modalVisible);
-        }}
+        onRequestClose={() => setModalVisible(false)}
       >
-        <View className="flex-1 justify-end bg-black bg-opacity-50">
-          <View className="w-full bg-white rounded-t-lg p-5">
-            <Text className="text-lg font-bold mb-4">Post Share</Text>
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-3xl p-6">
+            <View className="flex-row justify-between items-center mb-6">
+              <Text className="text-2xl font-bold">Post Share</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Ionicons name="close-circle" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
               onPress={() => setCompanyDropdownVisible(true)}
-              className="bg-gray-200 p-2 rounded mb-3"
+              className="bg-gray-50 p-4 rounded-xl mb-4"
             >
-              <Text>
+              <Text className="text-lg">
                 {selectedCompanyId ? selectedCompanyId : "Select Company"}
               </Text>
             </TouchableOpacity>
 
-            {/* Dropdown for Companies */}
             {companyDropdownVisible && (
-              <View className="absolute bg-white rounded-lg shadow-lg z-10 w-full">
+              <View className="absolute bg-white rounded-xl shadow-lg z-10 w-full left-6 right-6 max-h-60">
                 <FlatList
-                  data={companies.companies} // Assuming companies is an array of company names
-                  keyExtractor={(item) => item} // Assuming each company name is unique
+                  data={companies.companies}
+                  keyExtractor={(item) => item}
                   renderItem={({ item }) => (
                     <TouchableOpacity
                       onPress={() => handleCompanySelect(item)}
-                      className="p-2 border-b border-gray-200"
+                      className="p-4 border-b border-gray-100"
                     >
-                      <Text>{item}</Text>
+                      <Text className="text-lg">{item}</Text>
                     </TouchableOpacity>
                   )}
                 />
               </View>
             )}
 
-            {/* <TextInput
-              placeholder="Company ID"
-              value={companyId}
-              onChangeText={setCompanyId}
-              className="bg-gray-200 p-2 rounded mb-3"
-            /> */}
-            <TextInput
-              placeholder="Quantity"
-              value={quantity}
-              onChangeText={setQuantity}
-              keyboardType="numeric"
-              className="bg-gray-200 p-2 rounded mb-3"
-            />
-            <TextInput
-              placeholder="Price Per Share"
-              value={pricePerShare}
-              onChangeText={setPricePerShare}
-              keyboardType="numeric"
-              className="bg-gray-200 p-2 rounded mb-3"
-            />
-            <TextInput
-              placeholder="Minimum Shares To Buy"
-              value={minSharesToBuy}
-              onChangeText={setMinSharesToBuy}
-              keyboardType="numeric"
-              className="bg-gray-200 p-2 rounded mb-4"
-            />
+            <View className="space-y-4 mb-6">
+              <TextInput
+                placeholder="Quantity"
+                value={quantity}
+                onChangeText={setQuantity}
+                keyboardType="numeric"
+                className="bg-gray-50 p-4 rounded-xl text-lg"
+              />
+              <TextInput
+                placeholder="Price Per Share"
+                value={pricePerShare}
+                onChangeText={setPricePerShare}
+                keyboardType="numeric"
+                className="bg-gray-50 p-4 rounded-xl text-lg"
+              />
+              <TextInput
+                placeholder="Minimum Shares To Buy"
+                value={minSharesToBuy}
+                onChangeText={setMinSharesToBuy}
+                keyboardType="numeric"
+                className="bg-gray-50 p-4 rounded-xl text-lg"
+              />
+            </View>
 
             <TouchableOpacity
               onPress={handleSubmit}
-              className="bg-blue-500 p-2 rounded mb-2"
+              className="bg-secondary rounded-xl p-4"
             >
-              <Text className="text-white text-center">Submit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              className="bg-red-500 p-2 rounded"
-            >
-              <Text className="text-white text-center">Cancel</Text>
+              <Text className="text-white text-center font-semibold text-lg">
+                Post Share
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

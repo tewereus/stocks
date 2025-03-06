@@ -26,7 +26,7 @@ const Profile = () => {
 
   const handleLogout = () => {
     dispatch(logout()); // Dispatch logout action
-    router.push("index"); // Navigate to sign-in screen after logout
+    router.push("/(auth)/sign-in"); // Navigate to sign-in screen after logout
   };
 
   return (
@@ -52,9 +52,9 @@ const Profile = () => {
 
         {/* User Information */}
         <View className="bg-white rounded-lg p-4 shadow-md mb-4">
-          <Text className="text-lg font-bold mb-2">{user.name}</Text>
-          <Text className="text-gray-600">Email: {user.email}</Text>
-          <Text className="text-gray-600">Phone: {user.mobile}</Text>
+          <Text className="text-lg font-bold mb-2">{user?.name}</Text>
+          <Text className="text-gray-600">Email: {user?.email}</Text>
+          <Text className="text-gray-600">Phone: {user?.mobile}</Text>
         </View>
 
         {/* Action Buttons */}

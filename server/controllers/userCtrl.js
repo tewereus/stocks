@@ -10,6 +10,7 @@ const CompanyTransaction = require("../models/companyTransactionModel");
 
 const register = asyncHandler(async (req, res) => {
   const { email } = req.body;
+  console.log("here");
   try {
     const userExists = await User.findOne({ email });
     if (!userExists) {
@@ -25,6 +26,8 @@ const register = asyncHandler(async (req, res) => {
 
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  console.log("here");
+
   try {
     const user = await User.findOne({ email });
     if (user && user.isPasswordMatched(password)) {
